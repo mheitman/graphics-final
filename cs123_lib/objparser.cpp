@@ -59,16 +59,30 @@ void ObjParser::load_obj(const char* filename,
 //                        printf("File can't be read by our simple parser : ( Try exporting with other options\n");
 //                        return false;
 //                }
-                    vertIndices.push_back(ind0);
+
 //                    std::cout << ind0 << " " << ind1 << " " << ind2 << " " << ind3 << std::endl;
 //                    std::cout << uv0 << " " << uv1 << " " << uv2 << " " << uv3 << std::endl;
-                    vertIndices.push_back(ind1);
-                    vertIndices.push_back(ind2);
-                    vertIndices.push_back(ind3);
+//                    vertIndices.push_back(ind0);
+//                    vertIndices.push_back(ind1);
+//                    vertIndices.push_back(ind2);
+//                    vertIndices.push_back(ind3);
                     uvIndices    .push_back(uv0);
                     uvIndices    .push_back(uv1);
                     uvIndices    .push_back(uv2);
                     uvIndices    .push_back(uv3);
+
+//                    if (vertIndices.size() > 120)
+//                        return;
+
+                    // Read in the indices as two triangles
+                    vertIndices.push_back(ind0 - 1);
+                    vertIndices.push_back(ind1 - 1);
+                    vertIndices.push_back(ind2 - 1);
+
+                    vertIndices.push_back(ind0 - 1);
+                    vertIndices.push_back(ind2 - 1);
+                    vertIndices.push_back(ind3 - 1);
+
 //                    normalIndices.push_back(normalIndex[0]);
 //                    normalIndices.push_back(normalIndex[1]);
 //                    normalIndices.push_back(normalIndex[2]);

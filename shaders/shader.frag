@@ -48,6 +48,6 @@ void main(){
     fragColor += atten * color * lightColor * specularIntensity * highlight;
 
     // temp
-    fragColor = vec3(1.f);
-    fragColor = vtx_color;
+    //fragColor = vec3(1.f);
+    fragColor = lightColor * 1/abs(WorldSpace_position.z);
 }

@@ -33,14 +33,13 @@ GLWidget::GLWidget(QGLFormat format, QWidget *parent)
       ibo_handle(-1)
 {
 //    ObjParser::load_obj("hi", m_vertices, m_uvs, m_vertIndices, m_uvIndices);
-    // TEMPORARY ObjParser::load_obj("/Users/MaeHeitmann/Desktop/head.obj", m_vertices, m_uvs, m_vertIndices, m_uvIndices);
+    ObjParser::load_obj("../../../head.obj", m_vertices, m_uvs, m_vertIndices, m_uvIndices);
     std::cout << m_vertices.size() << std::endl;
     std::cout << m_uvs.size() << std::endl;
     std::cout << m_vertIndices.size() << std::endl;
     std::cout << m_uvIndices.size() << std::endl;
 //    initializeShape();
     ErrorChecker::printGLErrors("post init widget");
-
 }
 
 GLWidget::~GLWidget()
@@ -74,7 +73,7 @@ void GLWidget::initializeGL() {
     m_camera->updateMatrices();
     // END
 
-//    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
 //    glEnable(GL_CULL_FACE);
 
     // Set the color to set the screen when the color buffer is cleared.
@@ -99,7 +98,7 @@ void GLWidget::initializeGL() {
 void GLWidget::paintGL() {
     ErrorChecker::printGLErrors("pre paintgl");
     glUseProgram(m_program);       // Installs the shader program. You'll learn about this later.
-    glClear(GL_COLOR_BUFFER_BIT);  // Clears the color buffer. (i.e. Sets the screen to black.)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // Clears the color buffer. (i.e. Sets the screen to black.)
     glm::mat4 model(1.f);
 
     float ratio = static_cast<QGuiApplication *>(QCoreApplication::instance())->devicePixelRatio();
@@ -155,7 +154,6 @@ void GLWidget::paintGL() {
 
     int size;
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    std::cout << "indices " << size/sizeof(GL_UNSIGNED_INT) << std::endl;
     // Draw the triangles !
     glDrawElements(GL_TRIANGLES, size/sizeof(GL_UNSIGNED_INT), GL_UNSIGNED_INT, (void*)0);
 
@@ -214,9 +212,10 @@ void GLWidget::paintGL2() {
     model = glm::mat4(1.f);
     glUniformMatrix4fv(glGetUniformLocation(m_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
     glUniform3f(glGetUniformLocation(m_program, "color"),
-                settings.sphereMColor.redF(),
-                settings.sphereMColor.greenF(),
-                settings.sphereMColor.blueF());
+                1.0, 1.0, 1.0);
+                //settings.sphereMColor.redF(),
+                //settings.sphereMColor.greenF(),
+                //settings.sphereMColor.blueF());
     m_sphere->draw();
 
     // TODO: Draw two more spheres. (Task 2)
@@ -270,8 +269,8 @@ void GLWidget::initializeShape() {
     glBindVertexArray(vao_handle);
     // FILL THE VBO WITH VERTICES
     glBindBuffer(GL_ARRAY_BUFFER, positions_vbo);
-//    glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(glm::vec3), &m_vertices[0], GL_STATIC_DRAW);
-    glBufferData(GL_ARRAY_BUFFER, coords.size() * sizeof(float), coords.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(glm::vec3), &m_vertices[0], GL_STATIC_DRAW);
+//    glBufferData(GL_ARRAY_BUFFER, coords.size() * sizeof(float), coords.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // FILL THE VBO WITH COLOR
@@ -282,8 +281,8 @@ void GLWidget::initializeShape() {
 
     // FILL THE IBO WITH INDICES
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_handle);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
-//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_vertIndices.size() * sizeof(unsigned int), &m_vertIndices[0], GL_STATIC_DRAW);
+//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_vertIndices.size() * sizeof(unsigned int), &m_vertIndices[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
