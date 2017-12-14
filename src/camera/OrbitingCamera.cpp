@@ -21,6 +21,8 @@
 #include "OrbitingCamera.h"
 #include "Settings.h"
 
+#include <iostream>
+#include "glm/gtx/string_cast.hpp"
 
 void OrbitingCamera::setAspectRatio(float aspectRatio) {
     m_aspectRatio = aspectRatio;
@@ -49,12 +51,12 @@ void OrbitingCamera::mouseDown(int x, int y) {
 }
 
 void OrbitingCamera::mouseDragged(int x, int y) {
-    m_angleY += x - m_oldX;
-    m_angleX += y - m_oldY;
+    m_angleY += (x - m_oldX) * 20;
+    m_angleX += (y - m_oldY) * 20;
     m_oldX = x;
     m_oldY = y;
-    if (m_angleX < -90) m_angleX = -90;
-    if (m_angleX > 90) m_angleX = 90;
+//    if (m_angleX < -90) m_angleX = -90;
+//    if (m_angleX > 90) m_angleX = 90;
 
     updateViewMatrix();
 }

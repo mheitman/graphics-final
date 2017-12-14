@@ -26,9 +26,12 @@ in vec4 WorldSpace_normal;
 in vec4 CameraSpace_position;
 in vec4 CameraSpace_normal;
 
+in vec3 vtx_color;
+
 out vec3 fragColor;
 
 void main(){
+
     float d = sqrt(pow(WorldSpace_lightPos1.x - WorldSpace_position.x, 2)
                    + pow(WorldSpace_lightPos1.y - WorldSpace_position.y, 2)
                    + pow(WorldSpace_lightPos1.z - WorldSpace_position.z, 2));
@@ -43,4 +46,8 @@ void main(){
     vec3 R = reflect(L, n);
     float highlight = pow(max(0, dot(E, R)), shininess);
     fragColor += atten * color * lightColor * specularIntensity * highlight;
+
+    // temp
+    fragColor = vec3(1.f);
+    fragColor = vtx_color;
 }

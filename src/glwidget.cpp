@@ -28,16 +28,19 @@ GLWidget::GLWidget(QGLFormat format, QWidget *parent)
       m_camera(new OrbitingCamera()),
       m_sphere(nullptr),
       vao_handle(-1),
-      vbo_handle(-1),
+      positions_vbo(-1),
+      colors_vbo(-1),
       ibo_handle(-1)
 {
 //    ObjParser::load_obj("hi", m_vertices, m_uvs, m_vertIndices, m_uvIndices);
-    ObjParser::load_obj("/Users/MaeHeitmann/Desktop/head.obj", m_vertices, m_uvs, m_vertIndices, m_uvIndices);
+    // TEMPORARY ObjParser::load_obj("/Users/MaeHeitmann/Desktop/head.obj", m_vertices, m_uvs, m_vertIndices, m_uvIndices);
     std::cout << m_vertices.size() << std::endl;
     std::cout << m_uvs.size() << std::endl;
     std::cout << m_vertIndices.size() << std::endl;
     std::cout << m_uvIndices.size() << std::endl;
 //    initializeShape();
+    ErrorChecker::printGLErrors("post init widget");
+
 }
 
 GLWidget::~GLWidget()
@@ -45,16 +48,19 @@ GLWidget::~GLWidget()
 }
 
 void GLWidget::initializeGL() {
+    ErrorChecker::printGLErrors("pre initgl");
     ResourceLoader::initializeGlew();
+    ErrorChecker::printGLErrors("init glew");
     resizeGL(width(), height());
 
+    ErrorChecker::printGLErrors("resize gl");
     // START
-    glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_DEPTH_TEST);
 
     // Move the polygons back a bit so lines are still drawn even though they are coplanar with the
     // polygons they came from, which will be drawn before them.
-    glEnable(GL_POLYGON_OFFSET_LINE);
-    glPolygonOffset(-1, -1);
+    // glEnable(GL_POLYGON_OFFSET_LINE);
+    // glPolygonOffset(-1, -1);
 
     // Enable back-face culling, meaning only the front side of every face is rendered.
     glEnable(GL_CULL_FACE);
@@ -72,7 +78,7 @@ void GLWidget::initializeGL() {
 //    glEnable(GL_CULL_FACE);
 
     // Set the color to set the screen when the color buffer is cleared.
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(0.0f, 0.0f, 0.3f, 0.0f);
 
     // Creates the shader program that will be used for drawing.
     m_program = ResourceLoader::createShaderProgram(":/shaders/shader.vert", ":/shaders/shader.frag");
@@ -86,9 +92,12 @@ void GLWidget::initializeGL() {
 //    m_sphere->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
 //    m_sphere->setAttribute(ShaderAttrib::NORMAL, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, true);
 //    m_sphere->buildVAO();
+
+    ErrorChecker::printGLErrors("post initgl");
 }
 
 void GLWidget::paintGL() {
+    ErrorChecker::printGLErrors("pre paintgl");
     glUseProgram(m_program);       // Installs the shader program. You'll learn about this later.
     glClear(GL_COLOR_BUFFER_BIT);  // Clears the color buffer. (i.e. Sets the screen to black.)
     glm::mat4 model(1.f);
@@ -98,9 +107,7 @@ void GLWidget::paintGL() {
     m_camera->setAspectRatio(static_cast<float>(width()) / static_cast<float>(height()));
     glm::mat4 proj = m_camera->getProjectionMatrix();
     glm::mat4 view = m_camera->getViewMatrix();
-//    proj = glm::perspective(0.8f, (float)width()/height(), 0.1f, 100.f);
-
-    glUseProgram(m_program);
+    proj = glm::perspective(0.8f, (float)width()/height(), 0.1f, 100.f);
 
     // Sets projection and view matrix uniforms.
     glUniformMatrix4fv(glGetUniformLocation(m_program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
@@ -129,13 +136,18 @@ void GLWidget::paintGL() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // TODO [Task 8-10]: Draw shapes in the appropriate switch case.
-
+    ErrorChecker::printGLErrors("init");
     glBindVertexArray(vao_handle);
 
     glEnableVertexAttribArray(ShaderAttrib::POSITION);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_handle);
+    glBindBuffer(GL_ARRAY_BUFFER, positions_vbo);
     glVertexAttribPointer(ShaderAttrib::POSITION, 3,GL_FLOAT, GL_FALSE, 0, (void*)0);
 
+    glEnableVertexAttribArray(ShaderAttrib::COLOR);
+    glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
+    glVertexAttribPointer(ShaderAttrib::COLOR, 3,GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    ErrorChecker::printGLErrors("vbo");
     //for reference
     //m_strip->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
 
@@ -143,34 +155,14 @@ void GLWidget::paintGL() {
 
     int size;
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    std::cout << "indices " << size/sizeof(GL_UNSIGNED_INT) << std::endl;
     // Draw the triangles !
-    glDrawElements(
-        GL_TRIANGLES,      // mode
-        size/sizeof(GL_UNSIGNED_INT),                // count
-        GL_UNSIGNED_INT,   // type
-        (void*)0           // element array buffer offset
-    );
+    glDrawElements(GL_TRIANGLES, size/sizeof(GL_UNSIGNED_INT), GL_UNSIGNED_INT, (void*)0);
 
-
-
+    ErrorChecker::printGLErrors("draw");
     glBindVertexArray(0);
-
-
-    /*
-    switch (settings.shape) {
-        case SHAPE_TRIANGLE:
-            m_triangle->draw();
-            break;
-        case SHAPE_TRIANGLE_STRIP:
-            m_strip->draw();
-            break;
-        case SHAPE_TRIANGLE_FAN:
-            m_fan->draw();
-            break;
-    }
-    */
-
     glUseProgram(0); // Uninstalls the shader program.
+    ErrorChecker::printGLErrors("end");
 }
 
 void GLWidget::paintGL2() {
@@ -248,6 +240,7 @@ void GLWidget::paintGL2() {
 }
 
 void GLWidget::initializeShape() {
+    ErrorChecker::printGLErrors("pre init shape");
 //    m_triangle = std::make_unique<OpenGLShape>();
 //    // TODO [Task 7]
 
@@ -255,22 +248,36 @@ void GLWidget::initializeShape() {
         0, 0.5, 0,
         -0.5,-0.5, 0,
         0.5, -0.5, 0,
-        0.8, 0.5, 0,
+    };
+
+    std::vector<float> colors = {
+        1.0, 0.5, 0.5,
+        0.5, 1.0, 0.5,
+        0.5, 0.5, 1.0,
     };
 
     std::vector<unsigned int> indices = {
         0, 1, 2,
-        0, 2, 3,
+        0, 2, 1,
     };
+
     // generate everything
     glGenVertexArrays(1, &vao_handle);
-    glGenBuffers(1, &vbo_handle);
+    glGenBuffers(1, &positions_vbo);
+    glGenBuffers(1, &colors_vbo);
     glGenBuffers(1, &ibo_handle);
 
+    glBindVertexArray(vao_handle);
     // FILL THE VBO WITH VERTICES
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_handle);
+    glBindBuffer(GL_ARRAY_BUFFER, positions_vbo);
 //    glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(glm::vec3), &m_vertices[0], GL_STATIC_DRAW);
     glBufferData(GL_ARRAY_BUFFER, coords.size() * sizeof(float), coords.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // FILL THE VBO WITH COLOR
+    glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
+//    glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(glm::vec3), &m_vertices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(float), colors.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // FILL THE IBO WITH INDICES
@@ -278,19 +285,9 @@ void GLWidget::initializeShape() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 //    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_vertIndices.size() * sizeof(unsigned int), &m_vertIndices[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindVertexArray(vao_handle);
+    glBindVertexArray(0);
 
-//    m_triangle->setVertexData(coords.data(), coords.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLES, 3);
-//    m_triangle->setIndexData(indices.data());
-//    m_triangle->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
-//    m_triangle->buildVAO();
-
-    // NON_INDEXED STRATEGY
-//    std::vector<float> coords = {0, 0.5, 0, -0.5, -0.5, 0, 0.5, -0.5, 0};
-//    m_triangle->setVertexData(coords.data(), coords.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLES, 3);
-//    m_triangle->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
-//    m_triangle->buildVAO();
-
+    ErrorChecker::printGLErrors("post init shape");
 }
 
 void GLWidget::resizeGL(int w, int h) {
@@ -299,7 +296,7 @@ void GLWidget::resizeGL(int w, int h) {
 
 void GLWidget::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::RightButton) {
-        m_camera->mouseDown(10*event->x(), 10 * event->y());
+        m_camera->mouseDown(event->x(), event->y());
         m_isDragging = true;
         update();
         std::cout << "ALERT MOUSE IS DOWN, ALERT, MOUSE, IS, DOWN" << std::endl;
@@ -310,16 +307,16 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 void GLWidget::mouseMoveEvent(QMouseEvent *event) {
     if (m_isDragging) {
         std::cout << event->x() <<" " << event->y() << std::endl;
-        m_camera->mouseDragged(10 *event->x(), 10 *event->y());
+        m_camera->mouseDragged(event->x(), event->y());
         std::cout << "ALERT DRAGGGGGGINGGGGG" << std::endl;
         update();
-         m_camera->updateMatrices();
+        m_camera->updateMatrices();
     }
 }
 
 void GLWidget::mouseReleaseEvent(QMouseEvent *event) {
     if (m_isDragging && event->button() == Qt::RightButton) {
-        m_camera->mouseUp(10*event->x(), 10*event->y());
+        m_camera->mouseUp(event->x(), event->y());
         m_isDragging = false;
         update();
          m_camera->updateMatrices();

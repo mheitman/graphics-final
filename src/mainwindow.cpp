@@ -84,7 +84,8 @@ void MainWindow::dataBind() {
 
 #undef BIND
 
-    connect(m_glWidget, SIGNAL(aspectRatioChanged()), this, SLOT(updateAspectRatio()));
+    //FOR ERROR
+    //connect(m_glWidget, SIGNAL(aspectRatioChanged()), this, SLOT(updateAspectRatio()));
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {

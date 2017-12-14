@@ -61,7 +61,8 @@ private:
     std::vector<glm::vec2> m_uvs;
     std::vector<unsigned int> m_vertIndices, m_uvIndices;
     GLuint vao_handle;
-    GLuint vbo_handle;
+    GLuint positions_vbo;
+    GLuint colors_vbo;
     GLuint ibo_handle;
 };
 
