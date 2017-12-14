@@ -3,6 +3,6 @@ CS123
 Makefile
 moc_*
 qrc_resources.cpp
-CS123.pro.user
+*.pro.user
 ui_mainwindow.h
 
