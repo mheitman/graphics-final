@@ -20,8 +20,6 @@ uniform float diffuseIntensity;
 uniform float specularIntensity;
 uniform float shininess;
 
-uniform float blend;
-
 in vec4 WorldSpace_position;
 in vec4 WorldSpace_normal;
 
@@ -59,16 +57,16 @@ void main(){
     phong_color = ambientIntensity * color;
     vec3 n = normalize(texture(normal_sampler, uv).xyz);
     vec3 L = normalize(WorldSpace_lightPos1 - WorldSpace_position.xyz);
-    float prod = max(0, dot(n, L));
-    phong_color += atten * color * lightColor * diffuseIntensity * prod;
+    float lambert = max(0, dot(n, L));
+    vec3 tex_color = texture(tex_sampler, uv).xyz;
+    phong_color += atten * tex_color * lightColor * diffuseIntensity * lambert;
 
     vec3 E = normalize(CameraSpace_position.xyz);
     vec3 R = reflect(L, n);
     float highlight = pow(max(0, dot(E, R)), shininess);
     phong_color += atten * color * lightColor * specularIntensity * highlight;
 
-    vec3 tex_color = texture(tex_sampler, uv).xyz;
-    fragColor = mix(phong_color, tex_color, blend);
+    fragColor = phong_color;
 
 //    uv.y = 1.0 - uv.y;
 //    fragColor = texture(tex_sampler, uv).xyz;

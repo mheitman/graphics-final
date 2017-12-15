@@ -157,7 +157,6 @@ void GLWidget::paintGL() {
     glUniform1f(glGetUniformLocation(m_program, "specularIntensity"), settings.specularIntensity);
 
     glUniform3f(glGetUniformLocation(m_program, "color"), 1, 1, 1);
-    glUniform1f(glGetUniformLocation(m_program, "blend"), 0.9);
 
     ErrorChecker::printGLErrors("post uniforms");
 
