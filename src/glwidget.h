@@ -57,8 +57,8 @@ private:
     bool m_isDragging;
 
     std::unique_ptr<OpenGLShape> m_sphere;
-    std::vector<glm::vec3> m_vertices;
-    std::vector<glm::vec2> m_uvs;
+    std::vector<float> m_vertices;
+    std::vector<float> m_uvs;
     std::vector<unsigned int> m_indices;
     GLuint vao_handle;
     GLuint positions_vbo;

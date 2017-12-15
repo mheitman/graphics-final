@@ -28,58 +28,25 @@
 GLWidget::GLWidget(QGLFormat format, QWidget *parent)
     : QGLWidget(format, parent),
       m_program(0),
-//      m_camera
       m_isDragging(false),
       m_camera(new OrbitingCamera()),
-//<<<<<<< HEAD
-//      m_sphere(nullptr)
-//{
-////    ObjParser::load_obj("hi", m_vertices, m_uvs, m_vertIndices, m_uvIndices);
-//    ObjParser::load_obj("/Users/MaeHeitmann/Desktop/head.obj", m_vertices, m_uvs, m_vertIndices, m_uvIndices);
-//    std::cout << m_vertices.size() << std::endl;
-//    std::cout << m_uvs.size() << std::endl;
-//    std::cout << m_vertIndices.size() << std::endl;
-//    std::cout << m_uvIndices.size() << std::endl;
-//=======
       m_sphere(nullptr),
       vao_handle(-1),
       positions_vbo(-1),
       uvs_vbo(-1),
       ibo_handle(-1)
 {
-//    ObjParser::load_obj("hi", m_vertices, m_uvs, m_vertIndices, m_uvIndices);
-    char base_path[] = "../../../head-lee-perry-smith/";
+    char base_path[] = ":/head-lee-perry-smith/";
     char obj_path[BUFSIZE]; char normal_path[BUFSIZE];
     sprintf(obj_path, "%s%s", base_path, "head.obj");
     sprintf(normal_path, "%s%s", base_path, "source/lambertian.jpg");
 
-//    ObjParser::load_obj(obj_path, m_vertices, m_uvs, m_indices);
-    ObjParser::load_obj("/Users/MaeHeitmann/Desktop/head.obj", m_vertices, m_uvs, m_indices);
+//    ObjParser::load_obj(":/head-lee-perry-smith/head.obj", m_vertices, m_uvs, m_indices);
+    ObjParser::load_obj("/Users/weissmann/Desktop/final_graphics/graphics-final/head-lee-perry-smith/head.obj", m_vertices, m_uvs, m_indices);
+//    ObjParser::load_obj("/Users/MaeHeitmann/Desktop/head.obj", m_vertices, m_uvs, m_indices); // FILEPATH
+    std::cout << m_vertices.size() << ":" << m_uvs.size() << std::endl;
 
-    // LOAD THE TEXTURE!!
-//    QImage image;
-//    //bool success = image.load(":/head-lee-perry-smith/source/lambertian.jpg");
-//    bool success = image.load("/Users/weissmann/Desktop/final_graphics/graphics-final/head-lee-perry-smith/source/lambertian.jpg");
-//    if (!success) {
-//        std::cerr << "Cannot load image" << std::endl;
-//    }
-//    glGenTextures(1, &tex_handle);
-//    glBindTexture(GL_TEXTURE_2D, tex_handle);
-////    QImage tex = QGLWidget::convertToGLFormat(image);
-////    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex.width(), tex.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, tex.bits());
-//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width(), image.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, image.bits());
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//    std::cout << image.width() << " " << image.height() << std::endl;
-
-//    QImage image(":/images/ostrich.jpg");
-//    glGenTextures(1, &tex_handle);
-//    glBindTexture(GL_TEXTURE_2D, tex_handle);
-//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 585, 585, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     ErrorChecker::printGLErrors("loadingtex gl");
-//>>>>>>> fff81cf23684311351e7fa37dbd1bb415480eeda
 }
 
 GLWidget::~GLWidget()
@@ -113,81 +80,16 @@ void GLWidget::initializeGL() {
     // Creates the shader program that will be used for drawing.
     m_program = ResourceLoader::createShaderProgram(":/shaders/shader.vert", ":/shaders/shader.frag");
 
-//<<<<<<< HEAD
-//    // Initialize sphere with radius 0.5 centered at origin.
-//    std::vector<GLfloat> sphereData = SPHERE_VERTEX_POSITIONS;
-//    m_sphere = std::make_unique<OpenGLShape>();
-
-//    m_sphere->setVertexData(&sphereData[0], sphereData.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLES, NUM_SPHERE_VERTICES);
-//    m_sphere->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
-//    m_sphere->setAttribute(ShaderAttrib::NORMAL, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, true);
-//    m_sphere->buildVAO();
-//}
-
-//void GLWidget::paintGL() {
-//    ErrorChecker::printGLErrors("line 52");
-//    // Clear the color and depth buffers.
-//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-//    glm::vec3 eye = glm::vec3(0.f, 1.f, 4.f);
-//    glm::vec3 center = glm::vec3(0.f, 0.f, 0.f);
-//    glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
-////    m_camera->updateMatrices();
-////    m_camera->orientLook(camera.pos, camera.look, camera.up);
-//    //                    cam->setHeightAngle(camera.heightAngle);
-
-////    glm::mat4 proj = glm::perspective(0.8f, (float)width()/height(), 0.1f, 100.f);
-////    glm::mat4 proj = m_camera->getProjectionMatrix();
-////    glm::mat4 view = glm::lookAt(eye, center, up);
-////    glm::mat4 view = m_camera->getViewMatrix();
-//    glm::mat4 model(1.f);
-
-//    float ratio = static_cast<QGuiApplication *>(QCoreApplication::instance())->devicePixelRatio();
-//    glViewport(0, 0, width() * ratio, height() * ratio);
-//    m_camera->setAspectRatio(static_cast<float>(width()) / static_cast<float>(height()));
-//    glm::mat4 proj = m_camera->getProjectionMatrix();
-//    glm::mat4 view = m_camera->getViewMatrix();
-////    proj = glm::perspective(0.8f, (float)width()/height(), 0.1f, 100.f);
-
-//    glUseProgram(m_program);
-
-//    // Sets projection and view matrix uniforms.
-//    glUniformMatrix4fv(glGetUniformLocation(m_program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
-//    glUniformMatrix4fv(glGetUniformLocation(m_program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-//=======
     initializeShape();
-    m_sphere = std::make_unique<OpenGLShape>();
-
-    // TODO (Task 1): Initialize m_square.
-    std::vector<GLfloat> squareData = {-0.5, -0.5, 0.f, 1.f, 0.f, 0.f, 0, 1,
-                                       -0.5, 0.5, 0.f, 0.f, 1.f, 0.f, 0, 0,
-                                        0.5, -0.5, 0.f, 0.f, 0.f, 1.f, 1, 1,
-                                        0.5, 0.5, 0.f, 1.f, 0.f, 1.f, 1, 0};
-    m_sphere->setVertexData(&squareData[0], squareData.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLE_STRIP, 4);
-    m_sphere->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
-
-    // TODO (Task 3): Interleave positions and colors in the array used to intialize m_square
-    m_sphere->setAttribute(ShaderAttrib::COLOR, 3, 12, VBOAttribMarker::DATA_TYPE::FLOAT, false);
-
-    // TODO (Task 7): Interleave UV-coordinates along with positions and colors in your VBO
-    m_sphere->setAttribute(ShaderAttrib::TEXCOORD0, 2, 24, VBOAttribMarker::DATA_TYPE::FLOAT, false);
-    m_sphere->buildVAO();
-
-
-//    QImage image(":/images/ostrich.jpg");
-//    glGenTextures(1, &tex_handle);
-//    glBindTexture(GL_TEXTURE_2D, tex_handle);
-//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 585, 585, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    QImage image("/Users/MaeHeitmann/Desktop/cs1230/lab04/head-lee-perry-smith/source/lambertian.jpg");
+//    QImage image("/Users/MaeHeitmann/Desktop/cs1230/lab04/head-lee-perry-smith/source/lambertian.jpg"); // FILEPATH
+    QImage image("/Users/weissmann/Desktop/final_graphics/graphics-final/head-lee-perry-smith/source/lambertian.jpg");
+//    QImage image(":/head-lee-perry-smith/source/lambertian.jpg");
     if (image.isNull()) {
         std::cout << "ERRORRRR" << std::endl;
     }
     glGenTextures(1, &tex_handle);
     glBindTexture(GL_TEXTURE_2D, tex_handle);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4096, 4096, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4096, 4096, 0, GL_BGRA, GL_UNSIGNED_BYTE, image.bits());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -209,7 +111,7 @@ void GLWidget::paintGL() {
     m_camera->setAspectRatio(static_cast<float>(width()) / static_cast<float>(height()));
     glm::mat4 proj = m_camera->getProjectionMatrix();
     glm::mat4 view = m_camera->getViewMatrix();
-//    proj = glm::perspective(0.8f, (float)width()/height(), 0.1f, 100.f);
+    proj = glm::perspective(0.8f, (float)width()/height(), 0.1f, 100.f);
 
     ErrorChecker::printGLErrors("post setup");
 
@@ -221,7 +123,6 @@ void GLWidget::paintGL() {
     glUniformMatrix4fv(glGetUniformLocation(m_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
     ErrorChecker::printGLErrors("post mvp");
-//>>>>>>> fff81cf23684311351e7fa37dbd1bb415480eeda
 
     // Sets uniforms that are controlled by the UI.
     glUniform1f(glGetUniformLocation(m_program, "shininess"), settings.shininess);
@@ -237,37 +138,6 @@ void GLWidget::paintGL() {
     glUniform1f(glGetUniformLocation(m_program, "diffuseIntensity"), settings.diffuseIntensity);
     glUniform1f(glGetUniformLocation(m_program, "specularIntensity"), settings.specularIntensity);
 
-//<<<<<<< HEAD
-//    // Draws a sphere at the origin.
-//    model = glm::mat4(1.f);
-//    glUniformMatrix4fv(glGetUniformLocation(m_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-//    glUniform3f(glGetUniformLocation(m_program, "color"),
-//                settings.sphereMColor.redF(),
-//                settings.sphereMColor.greenF(),
-//                settings.sphereMColor.blueF());
-//    m_sphere->draw();
-
-//    // TODO: Draw two more spheres. (Task 2)
-//    model = glm::translate(glm::vec3(-1.5, 0, 0));
-//    glUniformMatrix4fv(glGetUniformLocation(m_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-//    glUniform3f(glGetUniformLocation(m_program, "color"),
-//                settings.sphereLColor.redF(),
-//                settings.sphereLColor.greenF(),
-//                settings.sphereLColor.blueF());
-//    m_sphere->draw();
-
-//    model = glm::translate(glm::vec3(1.5, 0, 0));
-//    glUniformMatrix4fv(glGetUniformLocation(m_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-//    glUniform3f(glGetUniformLocation(m_program, "color"),
-//                settings.sphereRColor.redF(),
-//                settings.sphereRColor.greenF(),
-//                settings.sphereRColor.blueF());
-//    m_sphere->draw();
-
-//    glUseProgram(0);
-//}
-
-//=======
     ErrorChecker::printGLErrors("post uniforms");
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -341,7 +211,6 @@ void GLWidget::initializeShape() {
     ErrorChecker::printGLErrors("post init shape");
 }
 
-//>>>>>>> fff81cf23684311351e7fa37dbd1bb415480eeda
 void GLWidget::resizeGL(int w, int h) {
     glViewport(0, 0, w, h);
 }

@@ -26,8 +26,8 @@ bool operator < ( vert_uv_pair a, vert_uv_pair b ) {
 
 
 void ObjParser::load_obj(const char* filename,
-                        std::vector<glm::vec3> &vertices,
-                        std::vector<glm::vec2> &uvs,
+                        std::vector<float> &vertices,
+                        std::vector<float> &uvs,
                         std::vector<unsigned int> &indices) {
     std::ifstream in(filename, std::ios::in);
         if (!in)
@@ -50,10 +50,7 @@ void ObjParser::load_obj(const char* filename,
                 non_adjusted_vertices.push_back(v);
             } else if (line.substr(0,3) == "vt ") {
                 std::istringstream s(line.substr(3));
-                float a;
-                float b;
-                glm::vec2 uv; s >> a; s >> b;
-                std::cout << a << std::endl;
+                float a, b; s >> a; s >> b;
                 non_adjusted_uvs.push_back(glm::vec2(a, 1.0 - b));
             } else if (line.substr(0,2) == "f ") {
                 vert_uv_pair pair;
@@ -81,8 +78,13 @@ void ObjParser::load_obj(const char* filename,
                         pairs[pair] = current_index;
                         adjusted_indices[i] = current_index;
                         // get the (v[i])th vertex (vec3) and put it in the output
-                        vertices.push_back(non_adjusted_vertices[pair.vertex]);
-                        uvs.push_back(non_adjusted_uvs[pair.uv]);
+                        glm::vec3 vt = non_adjusted_vertices[pair.vertex];
+                        glm::vec2 uv = non_adjusted_uvs[pair.uv];
+                        vertices.push_back(vt.x);
+                        vertices.push_back(vt.y);
+                        vertices.push_back(vt.z);
+                        uvs.push_back(uv.x);
+                        uvs.push_back(uv.y);
 
                         current_index ++;
                     }

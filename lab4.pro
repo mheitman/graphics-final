@@ -214,4 +214,5 @@ OTHER_FILES += \
     shaders/shader.vert
 
 RESOURCES += \
-    shaders/shaders.qrc
+    shaders/shaders.qrc \
+    head-lee-perry-smith/head-lee-perry-smith.qrc
