@@ -82,14 +82,32 @@ void GLWidget::initializeGL() {
 
     initializeShape();
 //    QImage image("/Users/MaeHeitmann/Desktop/cs1230/lab04/head-lee-perry-smith/source/lambertian.jpg"); // FILEPATH
-    QImage image("/Users/weissmann/Desktop/final_graphics/graphics-final/head-lee-perry-smith/source/lambertian.jpg");
 //    QImage image(":/head-lee-perry-smith/source/lambertian.jpg");
-    if (image.isNull()) {
-        std::cout << "ERRORRRR" << std::endl;
+    QImage tex_image("/Users/weissmann/Desktop/final_graphics/graphics-final/head-lee-perry-smith/source/lambertian.jpg");
+    if (tex_image.isNull()) {
+        std::cerr << "Error loading texture" << std::endl;
+        exit(1);
     }
     glGenTextures(1, &tex_handle);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex_handle);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4096, 4096, 0, GL_BGRA, GL_UNSIGNED_BYTE, image.bits());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4096, 4096, 0, GL_BGRA, GL_UNSIGNED_BYTE, tex_image.bits());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+//    QImage image("/Users/MaeHeitmann/Desktop/cs1230/lab04/head-lee-perry-smith/source/out_bent_normals.bmp"); // FILEPATH
+//    QImage image(":/head-lee-perry-smith/source/out_bent_normals.bmp");
+    QImage normal_image("/Users/weissmann/Desktop/final_graphics/graphics-final/head-lee-perry-smith/source/out_bent_normals.bmp");
+    if (normal_image.isNull()) {
+        std::cerr << "Error loading normal texture" << std::endl;
+        exit(1);
+    }
+    glGenTextures(1, &normal_handle);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, normal_handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 512, 512, 0, GL_BGRA, GL_UNSIGNED_BYTE, normal_image.bits());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -138,6 +156,9 @@ void GLWidget::paintGL() {
     glUniform1f(glGetUniformLocation(m_program, "diffuseIntensity"), settings.diffuseIntensity);
     glUniform1f(glGetUniformLocation(m_program, "specularIntensity"), settings.specularIntensity);
 
+    glUniform3f(glGetUniformLocation(m_program, "color"), 1, 1, 1);
+    glUniform1f(glGetUniformLocation(m_program, "blend"), 0.9);
+
     ErrorChecker::printGLErrors("post uniforms");
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -160,7 +181,9 @@ void GLWidget::paintGL() {
     ErrorChecker::printGLErrors("post send uvs");
 
     // Texture
-//    glBindTexture(GL_TEXTURE_2D, tex_handle);
+    glUniform1i(glGetUniformLocation(m_program, "tex_sampler"), 0);
+    glUniform1i(glGetUniformLocation(m_program, "normal_sampler"), 1);
+
     ErrorChecker::printGLErrors("post tex");
 
     // Indices

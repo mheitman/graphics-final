@@ -66,6 +66,7 @@ private:
     GLuint ibo_handle;
 
     GLuint tex_handle;
+    GLuint normal_handle;
 };
 
 #endif // GLWIDGET_H
