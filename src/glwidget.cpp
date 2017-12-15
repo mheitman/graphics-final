@@ -26,10 +26,7 @@ GLWidget::GLWidget(QGLFormat format, QWidget *parent)
 //      m_camera
       m_isDragging(false),
       m_camera(new OrbitingCamera()),
-      m_sphere(nullptr),
-      vao_handle(-1),
-      vbo_handle(-1),
-      ibo_handle(-1)
+      m_sphere(nullptr)
 {
 //    ObjParser::load_obj("hi", m_vertices, m_uvs, m_vertIndices, m_uvIndices);
     ObjParser::load_obj("/Users/MaeHeitmann/Desktop/head.obj", m_vertices, m_uvs, m_vertIndices, m_uvIndices);
@@ -37,7 +34,6 @@ GLWidget::GLWidget(QGLFormat format, QWidget *parent)
     std::cout << m_uvs.size() << std::endl;
     std::cout << m_vertIndices.size() << std::endl;
     std::cout << m_uvIndices.size() << std::endl;
-//    initializeShape();
 }
 
 GLWidget::~GLWidget()
@@ -78,102 +74,16 @@ void GLWidget::initializeGL() {
     m_program = ResourceLoader::createShaderProgram(":/shaders/shader.vert", ":/shaders/shader.frag");
 
     // Initialize sphere with radius 0.5 centered at origin.
-    initializeShape();
-//    std::vector<GLfloat> sphereData = SPHERE_VERTEX_POSITIONS;
-//    m_sphere = std::make_unique<OpenGLShape>();
+    std::vector<GLfloat> sphereData = SPHERE_VERTEX_POSITIONS;
+    m_sphere = std::make_unique<OpenGLShape>();
 
-//    m_sphere->setVertexData(&sphereData[0], sphereData.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLES, NUM_SPHERE_VERTICES);
-//    m_sphere->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
-//    m_sphere->setAttribute(ShaderAttrib::NORMAL, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, true);
-//    m_sphere->buildVAO();
+    m_sphere->setVertexData(&sphereData[0], sphereData.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLES, NUM_SPHERE_VERTICES);
+    m_sphere->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
+    m_sphere->setAttribute(ShaderAttrib::NORMAL, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, true);
+    m_sphere->buildVAO();
 }
 
 void GLWidget::paintGL() {
-    glUseProgram(m_program);       // Installs the shader program. You'll learn about this later.
-    glClear(GL_COLOR_BUFFER_BIT);  // Clears the color buffer. (i.e. Sets the screen to black.)
-    glm::mat4 model(1.f);
-
-    float ratio = static_cast<QGuiApplication *>(QCoreApplication::instance())->devicePixelRatio();
-    glViewport(0, 0, width() * ratio, height() * ratio);
-    m_camera->setAspectRatio(static_cast<float>(width()) / static_cast<float>(height()));
-    glm::mat4 proj = m_camera->getProjectionMatrix();
-    glm::mat4 view = m_camera->getViewMatrix();
-//    proj = glm::perspective(0.8f, (float)width()/height(), 0.1f, 100.f);
-
-    glUseProgram(m_program);
-
-    // Sets projection and view matrix uniforms.
-    glUniformMatrix4fv(glGetUniformLocation(m_program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
-    glUniformMatrix4fv(glGetUniformLocation(m_program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-    model = glm::mat4(1.f);
-    glUniformMatrix4fv(glGetUniformLocation(m_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
-    // Sets uniforms that are controlled by the UI.
-    glUniform1f(glGetUniformLocation(m_program, "shininess"), settings.shininess);
-    glUniform1f(glGetUniformLocation(m_program, "lightIntensity"), settings.lightIntensity);
-    glUniform3f(glGetUniformLocation(m_program, "lightColor"),
-                settings.lightColor.redF(),
-                settings.lightColor.greenF(),
-                settings.lightColor.blueF());
-    glUniform1f(glGetUniformLocation(m_program, "attQuadratic"), settings.attQuadratic);
-    glUniform1f(glGetUniformLocation(m_program, "attLinear"), settings.attLinear);
-    glUniform1f(glGetUniformLocation(m_program, "attConstant"), settings.attConstant);
-    glUniform1f(glGetUniformLocation(m_program, "ambientIntensity"), settings.ambientIntensity);
-    glUniform1f(glGetUniformLocation(m_program, "diffuseIntensity"), settings.diffuseIntensity);
-    glUniform1f(glGetUniformLocation(m_program, "specularIntensity"), settings.specularIntensity);
-
-
-    // This draws only the lines of the triangles if "Draw lines only" is checked. Otherwise they
-    // are filled in like normal.
-//    glPolygonMode(GL_FRONT_AND_BACK, settings.linesEnabled ? GL_LINE : GL_FILL);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    // TODO [Task 8-10]: Draw shapes in the appropriate switch case.
-
-    glBindVertexArray(vao_handle);
-
-    glEnableVertexAttribArray(ShaderAttrib::POSITION);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_handle);
-    glVertexAttribPointer(ShaderAttrib::POSITION, 3,GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-    //for reference
-    //m_strip->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_handle);
-
-    int size;
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    // Draw the triangles !
-    glDrawElements(
-        GL_TRIANGLES,      // mode
-        size/sizeof(GL_UNSIGNED_INT),                // count
-        GL_UNSIGNED_INT,   // type
-        (void*)0           // element array buffer offset
-    );
-
-
-
-    glBindVertexArray(0);
-
-
-    /*
-    switch (settings.shape) {
-        case SHAPE_TRIANGLE:
-            m_triangle->draw();
-            break;
-        case SHAPE_TRIANGLE_STRIP:
-            m_strip->draw();
-            break;
-        case SHAPE_TRIANGLE_FAN:
-            m_fan->draw();
-            break;
-    }
-    */
-
-    glUseProgram(0); // Uninstalls the shader program.
-}
-
-void GLWidget::paintGL2() {
     ErrorChecker::printGLErrors("line 52");
     // Clear the color and depth buffers.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -245,52 +155,6 @@ void GLWidget::paintGL2() {
     m_sphere->draw();
 
     glUseProgram(0);
-}
-
-void GLWidget::initializeShape() {
-//    m_triangle = std::make_unique<OpenGLShape>();
-//    // TODO [Task 7]
-
-    std::vector<float> coords = {
-        0, 0.5, 0,
-        -0.5,-0.5, 0,
-        0.5, -0.5, 0,
-        0.8, 0.5, 0,
-    };
-
-    std::vector<unsigned int> indices = {
-        0, 1, 2,
-        0, 2, 3,
-    };
-    // generate everything
-    glGenVertexArrays(1, &vao_handle);
-    glGenBuffers(1, &vbo_handle);
-    glGenBuffers(1, &ibo_handle);
-
-    // FILL THE VBO WITH VERTICES
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_handle);
-//    glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(glm::vec3), &m_vertices[0], GL_STATIC_DRAW);
-    glBufferData(GL_ARRAY_BUFFER, coords.size() * sizeof(float), coords.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // FILL THE IBO WITH INDICES
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_handle);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
-//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_vertIndices.size() * sizeof(unsigned int), &m_vertIndices[0], GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindVertexArray(vao_handle);
-
-//    m_triangle->setVertexData(coords.data(), coords.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLES, 3);
-//    m_triangle->setIndexData(indices.data());
-//    m_triangle->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
-//    m_triangle->buildVAO();
-
-    // NON_INDEXED STRATEGY
-//    std::vector<float> coords = {0, 0.5, 0, -0.5, -0.5, 0, 0.5, -0.5, 0};
-//    m_triangle->setVertexData(coords.data(), coords.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLES, 3);
-//    m_triangle->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
-//    m_triangle->buildVAO();
-
 }
 
 void GLWidget::resizeGL(int w, int h) {

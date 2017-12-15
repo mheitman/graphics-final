@@ -53,8 +53,8 @@ void OrbitingCamera::mouseDragged(int x, int y) {
     m_angleX += y - m_oldY;
     m_oldX = x;
     m_oldY = y;
-    if (m_angleX < -90) m_angleX = -90;
-    if (m_angleX > 90) m_angleX = 90;
+//    if (m_angleX < -90) m_angleX = -90;
+//    if (m_angleX > 90) m_angleX = 90;
 
     updateViewMatrix();
 }

@@ -37,7 +37,7 @@ protected:
     void initializeGL();
     void initializeShape();
     void paintGL();
-    void paintGL2();
+//    void paintGL2();
     void resizeGL(int w, int h);
 
     // Overridden from QWidget
