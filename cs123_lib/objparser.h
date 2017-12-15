@@ -13,11 +13,7 @@ public:
     static void load_obj(const char* filename,
                          std::vector<glm::vec3> &vertices,
                          std::vector<glm::vec2> &uvs,
-                         std::vector<unsigned int> &vertIndices,
-                         std::vector<unsigned int> & uvIndices);
-//    std::vector<float> vertices;
-//    std::vector<float> uvs;
-//    std::vector<int> indices;
+                         std::vector<unsigned int> &indices);
 };
 
 #endif // OBJPARSER_H
