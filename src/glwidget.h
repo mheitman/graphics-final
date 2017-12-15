@@ -59,11 +59,13 @@ private:
     std::unique_ptr<OpenGLShape> m_sphere;
     std::vector<glm::vec3> m_vertices;
     std::vector<glm::vec2> m_uvs;
-    std::vector<unsigned int> m_vertIndices, m_uvIndices;
+    std::vector<unsigned int> m_indices;
     GLuint vao_handle;
     GLuint positions_vbo;
-    GLuint colors_vbo;
+    GLuint uvs_vbo;
     GLuint ibo_handle;
+
+    GLuint tex_handle;
 };
 
 #endif // GLWIDGET_H

@@ -26,7 +26,8 @@ in vec4 WorldSpace_normal;
 in vec4 CameraSpace_position;
 in vec4 CameraSpace_normal;
 
-in vec3 vtx_color;
+uniform sampler2D sampler;
+in vec2 uv;
 
 out vec3 fragColor;
 
@@ -48,6 +49,7 @@ void main(){
     fragColor += atten * color * lightColor * specularIntensity * highlight;
 
     // temp
-    //fragColor = vec3(1.f);
-    fragColor = lightColor * 1/abs(WorldSpace_position.z);
+    //fragColor = lightColor * 1/abs(WorldSpace_position.z);
+    fragColor= texture(sampler, uv).xyz + vec3(0.1, 0.1, 0.1);
+    fragColor = vec3(uv.x, uv.y, 1.0);
 }

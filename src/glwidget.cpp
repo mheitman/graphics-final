@@ -1,5 +1,7 @@
 #include "glwidget.h"
 
+#define BUFSIZE 1024
+
 #include "sphere.h"
 #include "cs123_lib/resourceloader.h"
 #include "cs123_lib/errorchecker.h"
@@ -18,6 +20,9 @@
 #include "gl/shaders/ShaderAttribLocations.h"
 #include "camera/OrbitingCamera.h"
 
+#include <fstream>
+#include <glm/gtx/string_cast.hpp>
+
 #define PI 3.14159265f
 
 GLWidget::GLWidget(QGLFormat format, QWidget *parent)
@@ -29,17 +34,39 @@ GLWidget::GLWidget(QGLFormat format, QWidget *parent)
       m_sphere(nullptr),
       vao_handle(-1),
       positions_vbo(-1),
-      colors_vbo(-1),
+      uvs_vbo(-1),
       ibo_handle(-1)
 {
 //    ObjParser::load_obj("hi", m_vertices, m_uvs, m_vertIndices, m_uvIndices);
-    ObjParser::load_obj("../../../head.obj", m_vertices, m_uvs, m_vertIndices, m_uvIndices);
-    std::cout << m_vertices.size() << std::endl;
-    std::cout << m_uvs.size() << std::endl;
-    std::cout << m_vertIndices.size() << std::endl;
-    std::cout << m_uvIndices.size() << std::endl;
-//    initializeShape();
-    ErrorChecker::printGLErrors("post init widget");
+    char base_path[] = "../../../head-lee-perry-smith/";
+    char obj_path[BUFSIZE]; char normal_path[BUFSIZE];
+    sprintf(obj_path, "%s%s", base_path, "head.obj");
+    sprintf(normal_path, "%s%s", base_path, "source/lambertian.jpg");
+
+    ObjParser::load_obj(obj_path, m_vertices, m_uvs, m_indices);
+
+    // LOAD THE TEXTURE!!
+//    QImage image;
+//    //bool success = image.load(":/head-lee-perry-smith/source/lambertian.jpg");
+//    bool success = image.load("/Users/weissmann/Desktop/final_graphics/graphics-final/head-lee-perry-smith/source/lambertian.jpg");
+//    if (!success) {
+//        std::cerr << "Cannot load image" << std::endl;
+//    }
+//    glGenTextures(1, &tex_handle);
+//    glBindTexture(GL_TEXTURE_2D, tex_handle);
+////    QImage tex = QGLWidget::convertToGLFormat(image);
+////    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex.width(), tex.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, tex.bits());
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width(), image.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, image.bits());
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//    std::cout << image.width() << " " << image.height() << std::endl;
+
+    QImage image(":/images/ostrich.jpg");
+    glGenTextures(1, &tex_handle);
+    glBindTexture(GL_TEXTURE_2D, tex_handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 585, 585, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
 
 GLWidget::~GLWidget()
@@ -53,13 +80,6 @@ void GLWidget::initializeGL() {
     resizeGL(width(), height());
 
     ErrorChecker::printGLErrors("resize gl");
-    // START
-    // glEnable(GL_DEPTH_TEST);
-
-    // Move the polygons back a bit so lines are still drawn even though they are coplanar with the
-    // polygons they came from, which will be drawn before them.
-    // glEnable(GL_POLYGON_OFFSET_LINE);
-    // glPolygonOffset(-1, -1);
 
     // Enable back-face culling, meaning only the front side of every face is rendered.
     glEnable(GL_CULL_FACE);
@@ -71,26 +91,16 @@ void GLWidget::initializeGL() {
 
     // Calculate the orbiting camera matrices.
     m_camera->updateMatrices();
-    // END
 
     glEnable(GL_DEPTH_TEST);
-//    glEnable(GL_CULL_FACE);
 
     // Set the color to set the screen when the color buffer is cleared.
-    glClearColor(0.0f, 0.0f, 0.3f, 0.0f);
+    glClearColor(0.0f, 0.0f, 0.5f, 0.0f);
 
     // Creates the shader program that will be used for drawing.
     m_program = ResourceLoader::createShaderProgram(":/shaders/shader.vert", ":/shaders/shader.frag");
 
-    // Initialize sphere with radius 0.5 centered at origin.
     initializeShape();
-//    std::vector<GLfloat> sphereData = SPHERE_VERTEX_POSITIONS;
-//    m_sphere = std::make_unique<OpenGLShape>();
-
-//    m_sphere->setVertexData(&sphereData[0], sphereData.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLES, NUM_SPHERE_VERTICES);
-//    m_sphere->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
-//    m_sphere->setAttribute(ShaderAttrib::NORMAL, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, true);
-//    m_sphere->buildVAO();
 
     ErrorChecker::printGLErrors("post initgl");
 }
@@ -98,7 +108,9 @@ void GLWidget::initializeGL() {
 void GLWidget::paintGL() {
     ErrorChecker::printGLErrors("pre paintgl");
     glUseProgram(m_program);       // Installs the shader program. You'll learn about this later.
+    ErrorChecker::printGLErrors("post setup1");
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // Clears the color buffer. (i.e. Sets the screen to black.)
+    ErrorChecker::printGLErrors("post setup2");
     glm::mat4 model(1.f);
 
     float ratio = static_cast<QGuiApplication *>(QCoreApplication::instance())->devicePixelRatio();
@@ -108,11 +120,15 @@ void GLWidget::paintGL() {
     glm::mat4 view = m_camera->getViewMatrix();
     proj = glm::perspective(0.8f, (float)width()/height(), 0.1f, 100.f);
 
+    ErrorChecker::printGLErrors("post setup");
+
     // Sets projection and view matrix uniforms.
     glUniformMatrix4fv(glGetUniformLocation(m_program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
     glUniformMatrix4fv(glGetUniformLocation(m_program, "view"), 1, GL_FALSE, glm::value_ptr(view));
     model = glm::mat4(1.f);
     glUniformMatrix4fv(glGetUniformLocation(m_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+    ErrorChecker::printGLErrors("post mvp");
 
     // Sets uniforms that are controlled by the UI.
     glUniform1f(glGetUniformLocation(m_program, "shininess"), settings.shininess);
@@ -128,142 +144,52 @@ void GLWidget::paintGL() {
     glUniform1f(glGetUniformLocation(m_program, "diffuseIntensity"), settings.diffuseIntensity);
     glUniform1f(glGetUniformLocation(m_program, "specularIntensity"), settings.specularIntensity);
 
+    ErrorChecker::printGLErrors("post uniforms");
 
-    // This draws only the lines of the triangles if "Draw lines only" is checked. Otherwise they
-    // are filled in like normal.
-//    glPolygonMode(GL_FRONT_AND_BACK, settings.linesEnabled ? GL_LINE : GL_FILL);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // TODO [Task 8-10]: Draw shapes in the appropriate switch case.
-    ErrorChecker::printGLErrors("init");
     glBindVertexArray(vao_handle);
 
+    ErrorChecker::printGLErrors("post bind vao");
+    // Position
     glEnableVertexAttribArray(ShaderAttrib::POSITION);
     glBindBuffer(GL_ARRAY_BUFFER, positions_vbo);
-    glVertexAttribPointer(ShaderAttrib::POSITION, 3,GL_FLOAT, GL_FALSE, 0, (void*)0);
+    ErrorChecker::printGLErrors("post bind position vbo");
+    glVertexAttribPointer(ShaderAttrib::POSITION, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    ErrorChecker::printGLErrors("post apply attribute position");
 
-    glEnableVertexAttribArray(ShaderAttrib::COLOR);
-    glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
-    glVertexAttribPointer(ShaderAttrib::COLOR, 3,GL_FLOAT, GL_FALSE, 0, (void*)0);
+    // UVs
+    glEnableVertexAttribArray(ShaderAttrib::TEXCOORD0);
+    glBindBuffer(GL_ARRAY_BUFFER, uvs_vbo);
+    glVertexAttribPointer(ShaderAttrib::TEXCOORD0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    ErrorChecker::printGLErrors("post send uvs");
 
-    ErrorChecker::printGLErrors("vbo");
-    //for reference
-    //m_strip->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
+    // Texture
+    glBindTexture(GL_TEXTURE_2D, tex_handle);
+    ErrorChecker::printGLErrors("post tex");
 
+    // Indices
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_handle);
 
-    int size;
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    // Draw the triangles !
+    // Draw
+    int size; glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
     glDrawElements(GL_TRIANGLES, size/sizeof(GL_UNSIGNED_INT), GL_UNSIGNED_INT, (void*)0);
 
-    ErrorChecker::printGLErrors("draw");
+    ErrorChecker::printGLErrors("post draw");
+
+    // Unbind everything
     glBindVertexArray(0);
     glUseProgram(0); // Uninstalls the shader program.
-    ErrorChecker::printGLErrors("end");
-}
-
-void GLWidget::paintGL2() {
-    ErrorChecker::printGLErrors("line 52");
-    // Clear the color and depth buffers.
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glm::vec3 eye = glm::vec3(0.f, 1.f, 4.f);
-    glm::vec3 center = glm::vec3(0.f, 0.f, 0.f);
-    glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
-//    m_camera->updateMatrices();
-//    m_camera->orientLook(camera.pos, camera.look, camera.up);
-    //                    cam->setHeightAngle(camera.heightAngle);
-
-//    glm::mat4 proj = glm::perspective(0.8f, (float)width()/height(), 0.1f, 100.f);
-//    glm::mat4 proj = m_camera->getProjectionMatrix();
-//    glm::mat4 view = glm::lookAt(eye, center, up);
-//    glm::mat4 view = m_camera->getViewMatrix();
-    glm::mat4 model(1.f);
-
-    float ratio = static_cast<QGuiApplication *>(QCoreApplication::instance())->devicePixelRatio();
-    glViewport(0, 0, width() * ratio, height() * ratio);
-    m_camera->setAspectRatio(static_cast<float>(width()) / static_cast<float>(height()));
-    glm::mat4 proj = m_camera->getProjectionMatrix();
-    glm::mat4 view = m_camera->getViewMatrix();
-//    proj = glm::perspective(0.8f, (float)width()/height(), 0.1f, 100.f);
-
-    glUseProgram(m_program);
-
-    // Sets projection and view matrix uniforms.
-    glUniformMatrix4fv(glGetUniformLocation(m_program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
-    glUniformMatrix4fv(glGetUniformLocation(m_program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-
-    // Sets uniforms that are controlled by the UI.
-    glUniform1f(glGetUniformLocation(m_program, "shininess"), settings.shininess);
-    glUniform1f(glGetUniformLocation(m_program, "lightIntensity"), settings.lightIntensity);
-    glUniform3f(glGetUniformLocation(m_program, "lightColor"),
-                settings.lightColor.redF(),
-                settings.lightColor.greenF(),
-                settings.lightColor.blueF());
-    glUniform1f(glGetUniformLocation(m_program, "attQuadratic"), settings.attQuadratic);
-    glUniform1f(glGetUniformLocation(m_program, "attLinear"), settings.attLinear);
-    glUniform1f(glGetUniformLocation(m_program, "attConstant"), settings.attConstant);
-    glUniform1f(glGetUniformLocation(m_program, "ambientIntensity"), settings.ambientIntensity);
-    glUniform1f(glGetUniformLocation(m_program, "diffuseIntensity"), settings.diffuseIntensity);
-    glUniform1f(glGetUniformLocation(m_program, "specularIntensity"), settings.specularIntensity);
-
-    // Draws a sphere at the origin.
-    model = glm::mat4(1.f);
-    glUniformMatrix4fv(glGetUniformLocation(m_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniform3f(glGetUniformLocation(m_program, "color"),
-                1.0, 1.0, 1.0);
-                //settings.sphereMColor.redF(),
-                //settings.sphereMColor.greenF(),
-                //settings.sphereMColor.blueF());
-    m_sphere->draw();
-
-    // TODO: Draw two more spheres. (Task 2)
-    model = glm::translate(glm::vec3(-1.5, 0, 0));
-    glUniformMatrix4fv(glGetUniformLocation(m_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniform3f(glGetUniformLocation(m_program, "color"),
-                settings.sphereLColor.redF(),
-                settings.sphereLColor.greenF(),
-                settings.sphereLColor.blueF());
-    m_sphere->draw();
-
-    model = glm::translate(glm::vec3(1.5, 0, 0));
-    glUniformMatrix4fv(glGetUniformLocation(m_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniform3f(glGetUniformLocation(m_program, "color"),
-                settings.sphereRColor.redF(),
-                settings.sphereRColor.greenF(),
-                settings.sphereRColor.blueF());
-    m_sphere->draw();
-
-    glUseProgram(0);
+    ErrorChecker::printGLErrors("end paintgl");
 }
 
 void GLWidget::initializeShape() {
-    ErrorChecker::printGLErrors("pre init shape");
-//    m_triangle = std::make_unique<OpenGLShape>();
-//    // TODO [Task 7]
-
-    std::vector<float> coords = {
-        0, 0.5, 0,
-        -0.5,-0.5, 0,
-        0.5, -0.5, 0,
-    };
-
-    std::vector<float> colors = {
-        1.0, 0.5, 0.5,
-        0.5, 1.0, 0.5,
-        0.5, 0.5, 1.0,
-    };
-
-    std::vector<unsigned int> indices = {
-        0, 1, 2,
-        0, 2, 1,
-    };
 
     // generate everything
     glGenVertexArrays(1, &vao_handle);
     glGenBuffers(1, &positions_vbo);
-    glGenBuffers(1, &colors_vbo);
+    glGenBuffers(1, &uvs_vbo);
     glGenBuffers(1, &ibo_handle);
 
     glBindVertexArray(vao_handle);
@@ -273,16 +199,16 @@ void GLWidget::initializeShape() {
 //    glBufferData(GL_ARRAY_BUFFER, coords.size() * sizeof(float), coords.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // FILL THE VBO WITH COLOR
-    glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
+    // FILL THE VBO WITH UVS
+    glBindBuffer(GL_ARRAY_BUFFER, uvs_vbo);
 //    glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(glm::vec3), &m_vertices[0], GL_STATIC_DRAW);
-    glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(float), colors.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, m_uvs.size() * sizeof(float), m_uvs.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // FILL THE IBO WITH INDICES
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_handle);
 //    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_vertIndices.size() * sizeof(unsigned int), &m_vertIndices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(unsigned int), &m_indices[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
