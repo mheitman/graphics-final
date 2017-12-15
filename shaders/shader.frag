@@ -48,8 +48,11 @@ void main(){
     float highlight = pow(max(0, dot(E, R)), shininess);
     fragColor += atten * color * lightColor * specularIntensity * highlight;
 
+//    uv.y = 1.0 - uv.y;
+    fragColor= texture(sampler, uv).xyz;
+//    fragColor = vec3(uv.x, uv.y, 0); // x and y are 1... maybe... it's
+//    fragColor = vec3(-0.5, 0, 0);
+
     // temp
     //fragColor = lightColor * 1/abs(WorldSpace_position.z);
-    fragColor= texture(sampler, uv).xyz + vec3(0.1, 0.1, 0.1);
-    fragColor = vec3(uv.x, uv.y, 1.0);
 }

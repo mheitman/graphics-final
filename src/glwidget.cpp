@@ -53,7 +53,8 @@ GLWidget::GLWidget(QGLFormat format, QWidget *parent)
     sprintf(obj_path, "%s%s", base_path, "head.obj");
     sprintf(normal_path, "%s%s", base_path, "source/lambertian.jpg");
 
-    ObjParser::load_obj(obj_path, m_vertices, m_uvs, m_indices);
+//    ObjParser::load_obj(obj_path, m_vertices, m_uvs, m_indices);
+    ObjParser::load_obj("/Users/MaeHeitmann/Desktop/head.obj", m_vertices, m_uvs, m_indices);
 
     // LOAD THE TEXTURE!!
 //    QImage image;
@@ -71,12 +72,13 @@ GLWidget::GLWidget(QGLFormat format, QWidget *parent)
 //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 //    std::cout << image.width() << " " << image.height() << std::endl;
 
-    QImage image(":/images/ostrich.jpg");
-    glGenTextures(1, &tex_handle);
-    glBindTexture(GL_TEXTURE_2D, tex_handle);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 585, 585, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//    QImage image(":/images/ostrich.jpg");
+//    glGenTextures(1, &tex_handle);
+//    glBindTexture(GL_TEXTURE_2D, tex_handle);
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 585, 585, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    ErrorChecker::printGLErrors("loadingtex gl");
 //>>>>>>> fff81cf23684311351e7fa37dbd1bb415480eeda
 }
 
@@ -154,6 +156,42 @@ void GLWidget::initializeGL() {
 //    glUniformMatrix4fv(glGetUniformLocation(m_program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 //=======
     initializeShape();
+    m_sphere = std::make_unique<OpenGLShape>();
+
+    // TODO (Task 1): Initialize m_square.
+    std::vector<GLfloat> squareData = {-0.5, -0.5, 0.f, 1.f, 0.f, 0.f, 0, 1,
+                                       -0.5, 0.5, 0.f, 0.f, 1.f, 0.f, 0, 0,
+                                        0.5, -0.5, 0.f, 0.f, 0.f, 1.f, 1, 1,
+                                        0.5, 0.5, 0.f, 1.f, 0.f, 1.f, 1, 0};
+    m_sphere->setVertexData(&squareData[0], squareData.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLE_STRIP, 4);
+    m_sphere->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
+
+    // TODO (Task 3): Interleave positions and colors in the array used to intialize m_square
+    m_sphere->setAttribute(ShaderAttrib::COLOR, 3, 12, VBOAttribMarker::DATA_TYPE::FLOAT, false);
+
+    // TODO (Task 7): Interleave UV-coordinates along with positions and colors in your VBO
+    m_sphere->setAttribute(ShaderAttrib::TEXCOORD0, 2, 24, VBOAttribMarker::DATA_TYPE::FLOAT, false);
+    m_sphere->buildVAO();
+
+
+//    QImage image(":/images/ostrich.jpg");
+//    glGenTextures(1, &tex_handle);
+//    glBindTexture(GL_TEXTURE_2D, tex_handle);
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 585, 585, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    QImage image("/Users/MaeHeitmann/Desktop/cs1230/lab04/head-lee-perry-smith/source/lambertian.jpg");
+    if (image.isNull()) {
+        std::cout << "ERRORRRR" << std::endl;
+    }
+    glGenTextures(1, &tex_handle);
+    glBindTexture(GL_TEXTURE_2D, tex_handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4096, 4096, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.bits());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     ErrorChecker::printGLErrors("post initgl");
 }
@@ -171,14 +209,15 @@ void GLWidget::paintGL() {
     m_camera->setAspectRatio(static_cast<float>(width()) / static_cast<float>(height()));
     glm::mat4 proj = m_camera->getProjectionMatrix();
     glm::mat4 view = m_camera->getViewMatrix();
-    proj = glm::perspective(0.8f, (float)width()/height(), 0.1f, 100.f);
+//    proj = glm::perspective(0.8f, (float)width()/height(), 0.1f, 100.f);
 
     ErrorChecker::printGLErrors("post setup");
 
     // Sets projection and view matrix uniforms.
     glUniformMatrix4fv(glGetUniformLocation(m_program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
     glUniformMatrix4fv(glGetUniformLocation(m_program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-    model = glm::mat4(1.f);
+//    model = glm::mat4(1.f);
+//    model = glm::translate(glm::vec3(-1.5, 0, 0));
     glUniformMatrix4fv(glGetUniformLocation(m_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
     ErrorChecker::printGLErrors("post mvp");
@@ -251,15 +290,17 @@ void GLWidget::paintGL() {
     ErrorChecker::printGLErrors("post send uvs");
 
     // Texture
-    glBindTexture(GL_TEXTURE_2D, tex_handle);
+//    glBindTexture(GL_TEXTURE_2D, tex_handle);
     ErrorChecker::printGLErrors("post tex");
 
     // Indices
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_handle);
 
     // Draw
-    int size; glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    int size;
+    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
     glDrawElements(GL_TRIANGLES, size/sizeof(GL_UNSIGNED_INT), GL_UNSIGNED_INT, (void*)0);
+//    m_sphere->draw();
 
     ErrorChecker::printGLErrors("post draw");
 
@@ -311,7 +352,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
         m_isDragging = true;
         update();
         std::cout << "ALERT MOUSE IS DOWN, ALERT, MOUSE, IS, DOWN" << std::endl;
-         m_camera->updateMatrices();
+        m_camera->updateMatrices();
     }
 }
 

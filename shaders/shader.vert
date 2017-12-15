@@ -16,7 +16,8 @@ out vec2 uv;
 
 void main() {
 
-    uv = UV_coords;
+//    uv = vec2(UV_coords.x, 1.0 - UV_coords.y);
+    uv = vec2(UV_coords.x, UV_coords.y);
 
     WorldSpace_position = model * vec4(ObjectSpace_position, 1.0);
     CameraSpace_position = view * WorldSpace_position;

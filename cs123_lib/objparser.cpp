@@ -19,8 +19,9 @@ struct vert_uv_pair {
 
 };
 
-bool operator< ( vert_uv_pair a, vert_uv_pair b ) {
+bool operator < ( vert_uv_pair a, vert_uv_pair b ) {
     return std::make_pair(a.vertex,a.uv) < std::make_pair(b.vertex,b.uv);
+//    return a.uv < b.uv;
 }
 
 
@@ -49,8 +50,11 @@ void ObjParser::load_obj(const char* filename,
                 non_adjusted_vertices.push_back(v);
             } else if (line.substr(0,3) == "vt ") {
                 std::istringstream s(line.substr(3));
-                glm::vec2 uv; s >> uv.x; s >> uv.y;
-                non_adjusted_uvs.push_back(uv);
+                float a;
+                float b;
+                glm::vec2 uv; s >> a; s >> b;
+                std::cout << a << std::endl;
+                non_adjusted_uvs.push_back(glm::vec2(a, 1.0 - b));
             } else if (line.substr(0,2) == "f ") {
                 vert_uv_pair pair;
                 std::istringstream s(line.substr(2));
