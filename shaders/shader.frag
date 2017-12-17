@@ -52,14 +52,12 @@ void main(){
     float s12 = textureOffset(bump_sampler, uv, off.yz).x;
     vec3 va = normalize(vec3(size.xy,s21-s01));
     vec3 vb = normalize(vec3(size.yx,s12-s10));
-    vec3 bump_tangent_space = cross(va,vb);
-    vec3 flipped_bump = normalize(tangent_to_world * bump_tangent_space);
-    vec3 bump = normalize(reflect(-flipped_bump, n));
+    vec3 flipped_bump = cross(va,vb);
+    vec3 bump_tangent_space = vec3(-flipped_bump.x, -flipped_bump.y, flipped_bump.z);
+    vec3 bump = normalize(tangent_to_world * bump_tangent_space);
     //temp
     float lerp = attConstant / 10.0;
     n = bump * lerp + n * (1.0 - lerp);
-    n = bump * lerp + flipped_bump * (1.0 - lerp);
-    fragColor = n;
 
 
     //endtemp
@@ -73,9 +71,5 @@ void main(){
     float highlight = pow(max(0, dot(E, R)), shininess);
     phong_color += atten * color * lightColor * specularIntensity * highlight;
 
-    //fragColor = phong_color;
-
-    //fragColor = normalize(vec3(a, b, 0));
-    //fragColor = vec3(texture(bump_sampler, uv).x, 0, 0);
-
+    fragColor = phong_color;
 }
