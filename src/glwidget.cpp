@@ -10,6 +10,7 @@
 #include <iostream>
 #include <QApplication>
 #include "cs123_lib/objparser.h"
+#include "cs123_lib/textureloader.h"
 
 #define GLM_FORCE_RADIANS
 #include "glm/glm.hpp"            // glm::vec*, mat*, and basic glm functions
@@ -41,10 +42,9 @@ GLWidget::GLWidget(QGLFormat format, QWidget *parent)
     sprintf(obj_path, "%s%s", base_path, "head.obj");
     sprintf(normal_path, "%s%s", base_path, "source/lambertian.jpg");
 
-//    ObjParser::load_obj(":/head-lee-perry-smith/head.obj", m_vertices, m_uvs, m_indices);
-    ObjParser::load_obj("/Users/weissmann/Desktop/final_graphics/graphics-final/head-lee-perry-smith/head.obj", m_vertices, m_uvs, m_indices);
+   ObjParser::load_obj("/Users/weissmann/Desktop/final_graphics/graphics-final/head-lee-perry-smith/head.obj",
+                       m_vertices, m_uvs, m_tangents, m_bitangents, m_indices);
 //    ObjParser::load_obj("/Users/MaeHeitmann/Desktop/head.obj", m_vertices, m_uvs, m_indices); // FILEPATH
-    std::cout << m_vertices.size() << ":" << m_uvs.size() << std::endl;
 
     ErrorChecker::printGLErrors("loadingtex gl");
 }
@@ -75,43 +75,16 @@ void GLWidget::initializeGL() {
     glEnable(GL_DEPTH_TEST);
 
     // Set the color to set the screen when the color buffer is cleared.
-    glClearColor(0.0f, 0.0f, 0.5f, 0.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     // Creates the shader program that will be used for drawing.
     m_program = ResourceLoader::createShaderProgram(":/shaders/shader.vert", ":/shaders/shader.frag");
 
     initializeShape();
-//    QImage image("/Users/MaeHeitmann/Desktop/cs1230/lab04/head-lee-perry-smith/source/lambertian.jpg"); // FILEPATH
-//    QImage image(":/head-lee-perry-smith/source/lambertian.jpg");
-    QImage tex_image("/Users/weissmann/Desktop/final_graphics/graphics-final/head-lee-perry-smith/source/lambertian.jpg");
-    if (tex_image.isNull()) {
-        std::cerr << "Error loading texture" << std::endl;
-        exit(1);
-    }
-    glGenTextures(1, &tex_handle);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, tex_handle);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4096, 4096, 0, GL_BGRA, GL_UNSIGNED_BYTE, tex_image.bits());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-//    QImage image("/Users/MaeHeitmann/Desktop/cs1230/lab04/head-lee-perry-smith/source/out_bent_normals.bmp"); // FILEPATH
-//    QImage image(":/head-lee-perry-smith/source/out_bent_normals.bmp");
-    QImage normal_image("/Users/weissmann/Desktop/final_graphics/graphics-final/head-lee-perry-smith/source/out_bent_normals.bmp");
-    if (normal_image.isNull()) {
-        std::cerr << "Error loading normal texture" << std::endl;
-        exit(1);
-    }
-    glGenTextures(1, &normal_handle);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, normal_handle);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 512, 512, 0, GL_BGRA, GL_UNSIGNED_BYTE, normal_image.bits());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    TextureLoader::loadTexture(":/head-lee-perry-smith/source/lambertian.jpg", 0, tex_handle);
+    TextureLoader::loadTexture(":/head-lee-perry-smith/source/out_bent_normals.bmp", 1, normal_handle);
+    TextureLoader::loadTexture(":/head-lee-perry-smith/source/bump-lowRes.jpg", 2, bump_handle);
 
     ErrorChecker::printGLErrors("post initgl");
 }
@@ -119,9 +92,7 @@ void GLWidget::initializeGL() {
 void GLWidget::paintGL() {
     ErrorChecker::printGLErrors("pre paintgl");
     glUseProgram(m_program);       // Installs the shader program. You'll learn about this later.
-    ErrorChecker::printGLErrors("post setup1");
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // Clears the color buffer. (i.e. Sets the screen to black.)
-    ErrorChecker::printGLErrors("post setup2");
     glm::mat4 model(1.f);
 
     float ratio = static_cast<QGuiApplication *>(QCoreApplication::instance())->devicePixelRatio();
@@ -136,11 +107,7 @@ void GLWidget::paintGL() {
     // Sets projection and view matrix uniforms.
     glUniformMatrix4fv(glGetUniformLocation(m_program, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
     glUniformMatrix4fv(glGetUniformLocation(m_program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-//    model = glm::mat4(1.f);
-//    model = glm::translate(glm::vec3(-1.5, 0, 0));
     glUniformMatrix4fv(glGetUniformLocation(m_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
-    ErrorChecker::printGLErrors("post mvp");
 
     // Sets uniforms that are controlled by the UI.
     glUniform1f(glGetUniformLocation(m_program, "shininess"), settings.shininess);
@@ -155,33 +122,37 @@ void GLWidget::paintGL() {
     glUniform1f(glGetUniformLocation(m_program, "ambientIntensity"), settings.ambientIntensity);
     glUniform1f(glGetUniformLocation(m_program, "diffuseIntensity"), settings.diffuseIntensity);
     glUniform1f(glGetUniformLocation(m_program, "specularIntensity"), settings.specularIntensity);
-
     glUniform3f(glGetUniformLocation(m_program, "color"), 1, 1, 1);
-
-    ErrorChecker::printGLErrors("post uniforms");
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // TODO [Task 8-10]: Draw shapes in the appropriate switch case.
     glBindVertexArray(vao_handle);
 
-    ErrorChecker::printGLErrors("post bind vao");
     // Position
     glEnableVertexAttribArray(ShaderAttrib::POSITION);
     glBindBuffer(GL_ARRAY_BUFFER, positions_vbo);
-    ErrorChecker::printGLErrors("post bind position vbo");
     glVertexAttribPointer(ShaderAttrib::POSITION, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-    ErrorChecker::printGLErrors("post apply attribute position");
 
     // UVs
     glEnableVertexAttribArray(ShaderAttrib::TEXCOORD0);
     glBindBuffer(GL_ARRAY_BUFFER, uvs_vbo);
     glVertexAttribPointer(ShaderAttrib::TEXCOORD0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-    ErrorChecker::printGLErrors("post send uvs");
+
+    // Tangents
+    glEnableVertexAttribArray(ShaderAttrib::TANGENT);
+    glBindBuffer(GL_ARRAY_BUFFER, tangents_vbo);
+    glVertexAttribPointer(ShaderAttrib::TANGENT, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    // Bitangents
+    glEnableVertexAttribArray(ShaderAttrib::BINORMAL);
+    glBindBuffer(GL_ARRAY_BUFFER, bitangents_vbo);
+    glVertexAttribPointer(ShaderAttrib::BINORMAL, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     // Texture
     glUniform1i(glGetUniformLocation(m_program, "tex_sampler"), 0);
     glUniform1i(glGetUniformLocation(m_program, "normal_sampler"), 1);
+    glUniform1i(glGetUniformLocation(m_program, "bump_sampler"), 2);
 
     ErrorChecker::printGLErrors("post tex");
 
@@ -192,40 +163,39 @@ void GLWidget::paintGL() {
     int size;
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
     glDrawElements(GL_TRIANGLES, size/sizeof(GL_UNSIGNED_INT), GL_UNSIGNED_INT, (void*)0);
-//    m_sphere->draw();
 
-    ErrorChecker::printGLErrors("post draw");
 
     // Unbind everything
     glBindVertexArray(0);
     glUseProgram(0); // Uninstalls the shader program.
+
     ErrorChecker::printGLErrors("end paintgl");
+}
+
+void GLWidget::fillVBO(GLuint vbo_handle, std::vector<float> input) {
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_handle);
+    glBufferData(GL_ARRAY_BUFFER, input.size() * sizeof(float), input.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void GLWidget::initializeShape() {
 
-    // generate everything
+    // generate handles
     glGenVertexArrays(1, &vao_handle);
     glGenBuffers(1, &positions_vbo);
     glGenBuffers(1, &uvs_vbo);
     glGenBuffers(1, &ibo_handle);
 
     glBindVertexArray(vao_handle);
-    // FILL THE VBO WITH VERTICES
-    glBindBuffer(GL_ARRAY_BUFFER, positions_vbo);
-    glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(glm::vec3), &m_vertices[0], GL_STATIC_DRAW);
-//    glBufferData(GL_ARRAY_BUFFER, coords.size() * sizeof(float), coords.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // FILL THE VBO WITH UVS
-    glBindBuffer(GL_ARRAY_BUFFER, uvs_vbo);
-//    glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(glm::vec3), &m_vertices[0], GL_STATIC_DRAW);
-    glBufferData(GL_ARRAY_BUFFER, m_uvs.size() * sizeof(float), m_uvs.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // FILL THE VBO WITH Data
+    fillVBO(positions_vbo, m_vertices);
+    fillVBO(uvs_vbo, m_uvs);
+    fillVBO(tangents_vbo, m_tangents);
+    fillVBO(bitangents_vbo, m_bitangents);
 
     // FILL THE IBO WITH INDICES
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_handle);
-//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(unsigned int), &m_indices[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);

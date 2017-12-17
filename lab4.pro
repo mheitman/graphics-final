@@ -39,7 +39,8 @@ SOURCES += src/settings.cpp \
 #    glm/detail/dummy.cpp \
     glm/detail/glm.cpp \
     src/camera/OrbitingCamera.cpp \
-    cs123_lib/objparser.cpp
+    cs123_lib/objparser.cpp \
+    cs123_lib/textureloader.cpp
 
 
 HEADERS += \
@@ -205,7 +206,8 @@ HEADERS += \
     glm/vector_relational.hpp \
     src/camera/Camera.h \
     src/camera/OrbitingCamera.h \
-    cs123_lib/objparser.h
+    cs123_lib/objparser.h \
+    cs123_lib/textureloader.h
 
 FORMS += src/mainwindow.ui
 

@@ -13,6 +13,8 @@ public:
     static void load_obj(const char* filename,
                          std::vector<float> &vertices,
                          std::vector<float> &uvs,
+                         std::vector<float> &tangents,
+                         std::vector<float> &bitangents,
                          std::vector<unsigned int> &indices);
 };
 

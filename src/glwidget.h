@@ -37,8 +37,9 @@ protected:
     void initializeGL();
     void initializeShape();
     void paintGL();
-//    void paintGL2();
     void resizeGL(int w, int h);
+
+    void fillVBO(GLuint vbo_handle, std::vector<float> input);
 
     // Overridden from QWidget
     virtual void mousePressEvent(QMouseEvent *event) override;
@@ -59,14 +60,19 @@ private:
     std::unique_ptr<OpenGLShape> m_sphere;
     std::vector<float> m_vertices;
     std::vector<float> m_uvs;
+    std::vector<float> m_tangents;
+    std::vector<float> m_bitangents;
     std::vector<unsigned int> m_indices;
     GLuint vao_handle;
     GLuint positions_vbo;
     GLuint uvs_vbo;
+    GLuint tangents_vbo;
+    GLuint bitangents_vbo;
     GLuint ibo_handle;
 
     GLuint tex_handle;
     GLuint normal_handle;
+    GLuint bump_handle;
 };
 
 #endif // GLWIDGET_H

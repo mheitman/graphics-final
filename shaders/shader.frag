@@ -28,34 +28,38 @@ in vec4 CameraSpace_normal;
 
 uniform sampler2D tex_sampler;
 uniform sampler2D normal_sampler;
+uniform sampler2D bump_sampler;
+
 in vec2 uv;
+const vec2 size = vec2(0.01,0.0);
+const ivec3 off = ivec3(-1,0,1);
 
 out vec3 fragColor;
 
 void main(){
 
-//    float d = sqrt(pow(WorldSpace_lightPos1.x - WorldSpace_position.x, 2)
-//                   + pow(WorldSpace_lightPos1.y - WorldSpace_position.y, 2)
-//                   + pow(WorldSpace_lightPos1.z - WorldSpace_position.z, 2));
-//    float atten = lightIntensity * min(1 / (attConstant + attLinear * d + attQuadratic * pow(d, 2)), 1);
-//    fragColor = ambientIntensity * color;
-//    vec3 n = normalize(WorldSpace_normal.xyz);
-//    vec3 L = normalize(WorldSpace_lightPos1 - WorldSpace_position.xyz);
-//    float prod = max(0, dot(n, L));
-//    fragColor += atten * color * lightColor * diffuseIntensity * prod;
-
-//    vec3 E = normalize(CameraSpace_position.xyz);
-//    vec3 R = reflect(L, n);
-//    float highlight = pow(max(0, dot(E, R)), shininess);
-//    fragColor += atten * color * lightColor * specularIntensity * highlight;
     vec3 phong_color;
-
     float d = sqrt(pow(WorldSpace_lightPos1.x - WorldSpace_position.x, 2)
                    + pow(WorldSpace_lightPos1.y - WorldSpace_position.y, 2)
                    + pow(WorldSpace_lightPos1.z - WorldSpace_position.z, 2));
     float atten = lightIntensity * min(1 / (attConstant + attLinear * d + attQuadratic * pow(d, 2)), 1);
     phong_color = ambientIntensity * color;
     vec3 n = normalize(texture(normal_sampler, uv).xyz);
+
+    float s01 = textureOffset(bump_sampler, uv, off.xy).x;
+    float s21 = textureOffset(bump_sampler, uv, off.zy).x;
+    float s10 = textureOffset(bump_sampler, uv, off.yx).x;
+    float s12 = textureOffset(bump_sampler, uv, off.yz).x;
+    vec3 va = normalize(vec3(size.xy,s21-s01));
+    vec3 vb = normalize(vec3(size.yx,s12-s10));
+    vec3 bump = cross(va,vb);
+
+    //temp
+    float lerp = attConstant / 10.0;
+    n =  n * lerp + bump * (1.0 - lerp);
+    fragColor = n;
+
+    //endtemp
     vec3 L = normalize(WorldSpace_lightPos1 - WorldSpace_position.xyz);
     float lambert = max(0, dot(n, L));
     vec3 tex_color = texture(tex_sampler, uv).xyz;
@@ -66,13 +70,9 @@ void main(){
     float highlight = pow(max(0, dot(E, R)), shininess);
     phong_color += atten * color * lightColor * specularIntensity * highlight;
 
-    fragColor = phong_color;
+    //fragColor = phong_color;
 
-//    uv.y = 1.0 - uv.y;
-//    fragColor = texture(tex_sampler, uv).xyz;
-//    if (WorldSpace_position.z < -0.01) {
-//        fragColor = texture(normal_sampler, uv).xyz;
-//    }
-
+    //fragColor = normalize(vec3(a, b, 0));
+    //fragColor = vec3(texture(bump_sampler, uv).x, 0, 0);
 
 }

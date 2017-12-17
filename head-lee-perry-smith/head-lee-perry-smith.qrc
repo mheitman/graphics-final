@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/head-lee-perry-smith">
-        <file>head.obj</file>
         <file>source/lambertian.jpg</file>
+        <file>source/out_bent_normals.bmp</file>
+        <file>source/bump-lowRes.jpg</file>
     </qresource>
 </RCC>
