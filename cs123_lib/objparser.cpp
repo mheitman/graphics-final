@@ -74,6 +74,28 @@ void ObjParser::load_obj(const char* filename,
                 if (it != pairs.end()) {
                     // Found something
                     adjusted_indices[i] = it->second;
+
+                    switch(i) {
+                    case 1:
+                        add_tangent_for_face(0, 1, 2, i, non_adjusted_vertices, non_adjusted_uvs, pair,
+                                             tangents_by_vertex, bitangents_by_vertex, false);
+                        break;
+                    case 0:
+                    case 2:
+                        add_tangent_for_face(0, 1, 2, i, non_adjusted_vertices, non_adjusted_uvs, pair,
+                                             tangents_by_vertex, bitangents_by_vertex, false);
+                        add_tangent_for_face(0, 2, 3, i, non_adjusted_vertices, non_adjusted_uvs, pair,
+                                             tangents_by_vertex, bitangents_by_vertex, false);
+                        break;
+                    case 3:
+                        add_tangent_for_face(0, 2, 3, i, non_adjusted_vertices, non_adjusted_uvs, pair,
+                                             tangents_by_vertex, bitangents_by_vertex, false);
+                        break;
+                    default:
+                        /* impossible */
+                        break;
+                    }
+
                 } else {
                     // Didn't find anything
                     pairs[pair[i]] = current_index;
@@ -137,14 +159,27 @@ void ObjParser::load_obj(const char* filename,
 
     for (int i = 0; i < original_indices.size(); i++) {
         std::vector<glm::vec3> tangents_for_this_vertex = tangents_by_vertex[original_indices[i]];
-        tangents.push_back(tangents_for_this_vertex[0].x);
-        tangents.push_back(tangents_for_this_vertex[0].y);
-        tangents.push_back(tangents_for_this_vertex[0].z);
-
         std::vector<glm::vec3> bitangents_for_this_vertex = bitangents_by_vertex[original_indices[i]];
-        bitangents.push_back(bitangents_for_this_vertex[0].x);
-        bitangents.push_back(bitangents_for_this_vertex[0].y);
-        bitangents.push_back(bitangents_for_this_vertex[0].z);
+
+        glm::vec3 t = glm::vec3(0);
+        glm::vec3 b = glm::vec3(0);
+
+        for (int j = 0; j < tangents_for_this_vertex.size(); j++) {
+            t += tangents_for_this_vertex[j];
+        }
+        for (int j = 0; j < bitangents_for_this_vertex.size(); j++) {
+            b += bitangents_for_this_vertex[j];
+        }
+        t /= tangents_for_this_vertex.size();
+        b /= bitangents_for_this_vertex.size();
+
+        tangents.push_back(t.x);
+        tangents.push_back(t.y);
+        tangents.push_back(t.z);
+
+        bitangents.push_back(b.x);
+        bitangents.push_back(b.y);
+        bitangents.push_back(b.z);
     }
 
     std::cout << "Done..." << std::endl;

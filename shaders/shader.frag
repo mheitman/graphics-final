@@ -24,7 +24,6 @@ in vec4 WorldSpace_position;
 in vec4 CameraSpace_position;
 
 in mat3 tangent_to_world;
-in vec3 bad_n;
 
 uniform sampler2D tex_sampler;
 uniform sampler2D normal_sampler;

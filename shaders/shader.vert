@@ -24,7 +24,6 @@ void main() {
     gl_Position = projection * CameraSpace_position;
 
     vec3 WorldSpace_normal = normalize(cross(WorldSpace_tangent, WorldSpace_bitangent));
-    bad_n = WorldSpace_normal;
     tangent_to_world = mat3(
         WorldSpace_tangent,
         WorldSpace_bitangent,
