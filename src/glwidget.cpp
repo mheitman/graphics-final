@@ -37,15 +37,16 @@ GLWidget::GLWidget(QGLFormat format, QWidget *parent)
       uvs_vbo(-1),
       ibo_handle(-1)
 {
-    char base_path[] = ":/head-lee-perry-smith/";
-    char obj_path[BUFSIZE]; char normal_path[BUFSIZE];
-    sprintf(obj_path, "%s%s", base_path, "head.obj");
-    sprintf(normal_path, "%s%s", base_path, "source/lambertian.jpg");
+    bool IS_MAE_RUNNING = false;
 
-   ObjParser::load_obj("/Users/weissmann/Desktop/final_graphics/graphics-final/head-lee-perry-smith/head.obj",
-                       m_vertices, m_uvs, m_tangents, m_bitangents, m_indices);
-//    ObjParser::load_obj("/Users/MaeHeitmann/Desktop/head.obj", m_vertices, m_uvs, m_indices); // FILEPATH
+    char ben_path[] = "/Users/weissmann/Desktop/final_graphics/graphics-final/head-lee-perry-smith/head.obj";
+    char mae_path[] = "/Users/MaeHeitmann/Desktop/head.obj";
 
+    ObjParser::load_obj(IS_MAE_RUNNING ? mae_path : ben_path, m_vertices, m_uvs, m_tangents, m_bitangents, m_indices);
+    std::cout << m_vertices.size() << " "
+              << m_uvs.size() << " "
+              << m_tangents.size() << " "
+              << m_bitangents.size() << " "  << std::endl;
     ErrorChecker::printGLErrors("loadingtex gl");
 }
 
@@ -184,6 +185,8 @@ void GLWidget::initializeShape() {
     glGenVertexArrays(1, &vao_handle);
     glGenBuffers(1, &positions_vbo);
     glGenBuffers(1, &uvs_vbo);
+    glGenBuffers(1, &tangents_vbo);
+    glGenBuffers(1, &bitangents_vbo);
     glGenBuffers(1, &ibo_handle);
 
     glBindVertexArray(vao_handle);
